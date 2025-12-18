@@ -1,0 +1,123 @@
+<!-- templates/safe_comments.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Безопасные комментарии</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Безопасные комментарии (защита от XSS)</h1>
+            <nav>
+                <a href="/">Главная</a>
+                <a href="/search">Поиск (SQL-инъекция)</a>
+                <a href="/login">Вход (SQL-инъекция)</a>
+                <a href="/comments">Комментарии (XSS)</a>
+                <a href="/safe-search">Безопасный поиск</a>
+                <a href="/safe-comments">Безопасные комментарии</a>
+                <a href="/demo">Демонстрация атак</a>
+            </nav>
+        </header>
+        
+        <main>
+            
+            <section>
+                <h2>Добавить комментарий (безопасная версия)</h2>
+                <form method="post" action="/comments">
+                    <div>
+                        <label for="username">Имя пользователя:</label>
+                        <input type="text" id="username" name="username" value="guest">
+                    </div>
+                    <div>
+                        <label for="content">Комментарий:</label>
+                        <textarea id="content" name="content" rows="4" placeholder="Введите ваш комментарий..." required></textarea>
+                    </div>
+                    <button type="submit">Отправить</button>
+                </form>
+                
+                <div class="warning">
+                    <p><strong>Внимание:</strong> Форма отправляет данные на уязвимый endpoint. Для полной безопасности нужна и безопасная форма тоже.</p>
+                </div>
+            </section>
+            
+            <section>
+                <h2>Комментарии (с экранированием HTML)</h2>
+                {% if messages %}
+                <div class="comments">
+                    {% for msg in messages %}
+                    <div class="comment">
+                        <div class="comment-header">
+                            <strong>{{ msg.username }}</strong>
+                            <span>{{ msg.timestamp }}</span>
+                        </div>
+                        <div class="comment-content">
+                            <!-- БЕЗОПАСНО: содержимое экранировано в коде представления -->
+                            {{ msg.content }}
+                        </div>
+                        <div class="comment-raw">
+                            <small>Исходный текст: <code>{{ msg.content }}</code></small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>Пока нет комментариев.</p>
+                {% endif %}
+            </section>
+            
+            <section class="examples">
+                <h2>Почему это безопасно?</h2>
+                <p>Попробуйте те же XSS-атаки, что работали на уязвимой странице:</p>
+                <ul>
+                    <li><code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code> - отобразится как текст, а не выполнится</li>
+                    <li><code>&lt;img src="x" onerror="alert(1)"&gt;</code> - будет показан как текст</li>
+                    <li><code>&lt;iframe src="javascript:alert('XSS')"&gt;&lt;/iframe&gt;</code> - не создаст iframe</li>
+                </ul>
+                
+                <h3>Как работает защита:</h3>
+                <ul>
+                    <li>Специальные HTML-символы заменяются на сущности:
+                        <ul>
+                            <li><code>&lt;</code> → <code>&amp;lt;</code></li>
+                            <li><code>&gt;</code> → <code>&amp;gt;</code></li>
+                            <li><code>&amp;</code> → <code>&amp;amp;</code></li>
+                            <li><code>"</code> → <code>&amp;quot;</code></li>
+                            <li><code>'</code> → <code>&amp;#x27;</code></li>
+                        </ul>
+                    </li>
+                    <li>Браузер отображает эти символы как текст, а не интерпретирует как HTML</li>
+                </ul>
+                
+                <h3>Код на Python:</h3>
+                <pre><code>
+# Уязвимый код (НЕПРАВИЛЬНО):
+# В шаблоне: {{ content|safe }}
+
+# Безопасный код (ПРАВИЛЬНО):
+# В представлении:
+from html import escape
+safe_content = escape(user_content)
+
+# В шаблоне:
+{{ content }}  # автоматически экранируется
+                </code></pre>
+                
+                <h3>Дополнительные меры защиты:</h3>
+                <ul>
+                    <li>Content Security Policy (CSP) - ограничивает источники скриптов</li>
+                    <li>HTTPOnly cookies - предотвращают кражу cookies через JavaScript</li>
+                    <li>Валидация ввода на стороне сервера</li>
+                    <li>Библиотеки для очистки HTML (bleach, html-sanitizer)</li>
+                </ul>
+            </section>
+        </main>
+        
+        <footer>
+            <p>Демонстрационный сайт для обучения безопасности. Всегда экранируйте пользовательский ввод в реальных приложениях!</p>
+        </footer>
+    </div>
+</body>
+</html>

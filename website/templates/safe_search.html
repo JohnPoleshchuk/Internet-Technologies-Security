@@ -1,0 +1,103 @@
+<!-- templates/safe_search.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Безопасный поиск</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Безопасный поиск пользователей</h1>
+            <nav>
+                <a href="/">Главная</a>
+                <a href="/search">Поиск (SQL-инъекция)</a>
+                <a href="/login">Вход (SQL-инъекция)</a>
+                <a href="/comments">Комментарии (XSS)</a>
+                <a href="/safe-search">Безопасный поиск</a>
+                <a href="/safe-comments">Безопасные комментарии</a>
+                <a href="/demo">Демонстрация атак</a>
+            </nav>
+        </header>
+        
+        <main>
+            
+            <section>
+                <h2>Поиск пользователей (безопасная версия)</h2>
+                <form method="get" action="/safe-search">
+                    <input type="text" name="query" placeholder="Введите имя или email" value="{{ query }}" required>
+                    <button type="submit">Искать</button>
+                </form>
+                
+                {% if query %}
+                <div class="sql-demo">
+                    <h3>Параметризованный SQL-запрос:</h3>
+                    <code>{{ sql_query }}</code>
+                    <h4>Параметры:</h4>
+                    <code>{{ params }}</code>
+                </div>
+                
+                {% if users %}
+                <h3>Результаты поиска ({{ users|length }}):</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Имя пользователя</th>
+                            <th>Пароль</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.password }}</td>
+                            <td>{{ user.email }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>Пользователи не найдены.</p>
+                {% endif %}
+                {% endif %}
+            </section>
+            
+            <section class="examples">
+                <h2>Почему это безопасно?</h2>
+                <p>Попробуйте те же SQL-инъекции, что работали на уязвимой странице:</p>
+                <ul>
+                    <li><code>' OR '1'='1</code> - найдет только пользователей с таким текстом в имени</li>
+                    <li><code>' UNION SELECT id, username, password, email FROM users--</code> - будет искать как строку</li>
+                    <li><code>'; DROP TABLE users;--</code> - не выполнит команду DROP</li>
+                </ul>
+                
+                <h3>Как работает защита:</h3>
+                <ul>
+                    <li>Пользовательский ввод передается как <strong>параметры</strong>, а не как часть SQL-запроса</li>
+                    <li>База данных четко разделяет данные и команды</li>
+                    <li>Специальные символы (', ;, --) обрабатываются как данные, а не как команды SQL</li>
+                </ul>
+                
+                <h3>Код на Python:</h3>
+                <pre><code>
+# Уязвимый код (НЕПРАВИЛЬНО):
+sql = f"SELECT * FROM users WHERE username = '{username}'"
+
+# Безопасный код (ПРАВИЛЬНО):
+sql = "SELECT * FROM users WHERE username = ?"
+cursor.execute(sql, (username,))
+                </code></pre>
+            </section>
+        </main>
+        
+        <footer>
+            <p>Демонстрационный сайт для обучения безопасности. Всегда используйте параметризованные запросы в реальных приложениях!</p>
+        </footer>
+    </div>
+</body>
+</html>

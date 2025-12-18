@@ -1,0 +1,90 @@
+<!-- templates/search.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Поиск с SQL-инъекцией</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Поиск пользователей (SQL-инъекция)</h1>
+            <nav>
+                <a href="/">Главная</a>
+                <a href="/search">Поиск (SQL-инъекция)</a>
+                <a href="/login">Вход (SQL-инъекция)</a>
+                <a href="/comments">Комментарии (XSS)</a>
+                <a href="/safe-search">Безопасный поиск</a>
+                <a href="/safe-comments">Безопасные комментарии</a>
+                <a href="/demo">Демонстрация атак</a>
+            </nav>
+        </header>
+        
+        <main>
+            
+            <section>
+                <h2>Поиск пользователей</h2>
+                <form method="get" action="/search">
+                    <input type="text" name="query" placeholder="Введите имя или email" value="{{ query }}" required>
+                    <button type="submit">Искать</button>
+                </form>
+                
+                {% if query %}
+                <div class="sql-demo">
+                    <h3>Выполненный SQL-запрос:</h3>
+                    <code>{{ sql_query }}</code>
+                </div>
+                
+                {% if users %}
+                <h3>Результаты поиска ({{ users|length }}):</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Имя пользователя</th>
+                            <th>Пароль</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.password }}</td>
+                            <td>{{ user.email }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>Пользователи не найдены.</p>
+                {% endif %}
+                {% endif %}
+            </section>
+            
+            <section class="examples">
+                <h2>Примеры SQL-инъекций для тестирования:</h2>
+                <ul>
+                    <li><code>' OR '1'='1</code> - покажет всех пользователей</li>
+                    <li><code>' UNION SELECT id, username, password, email FROM users--</code> - классическая UNION атака</li>
+                    <li><code>admin'--</code> - найдет пользователя admin</li>
+                    <li><code>' OR '1'='1' UNION SELECT 1,2,3,4--</code> - проверка количества столбцов</li>
+                </ul>
+                
+                <h3>Опасные примеры:</h3>
+                <ul>
+                    <li><code>'; DROP TABLE users;--</code> - удалит таблицу пользователей (не пробуйте на продакшене!)</li>
+                    <li><code>' UNION SELECT 1,sql,3,4 FROM sqlite_master WHERE type='table'--</code> - получит структуру БД</li>
+                </ul>
+            </section>
+        </main>
+        
+        <footer>
+            <p>Демонстрационный сайт для обучения безопасности. Никогда не используйте уязвимый код в продакшене!</p>
+        </footer>
+    </div>
+</body>
+</html>

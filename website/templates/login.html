@@ -1,0 +1,120 @@
+<!-- templates/login.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход (SQL-инъекция)</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Вход в систему (SQL-инъекция)</h1>
+            <nav>
+                <a href="/">Главная</a>
+                <a href="/search">Поиск (SQL-инъекция)</a>
+                <a href="/login">Вход (SQL-инъекция)</a>
+                <a href="/comments">Комментарии (XSS)</a>
+                <a href="/safe-search">Безопасный поиск</a>
+                <a href="/safe-comments">Безопасные комментарии</a>
+                <a href="/demo">Демонстрация атак</a>
+            </nav>
+        </header>
+        
+        <main>
+            
+            <section>
+                <h2>Форма входа</h2>
+                {% if error %}
+                <div class="error">
+                    <p><strong>Ошибка:</strong> {{ error }}</p>
+                </div>
+                {% endif %}
+                
+                <form method="post" action="/login">
+                    <div>
+                        <label for="username">Имя пользователя:</label>
+                        <input type="text" id="username" name="username" value="{{ username if username else '' }}" required>
+                    </div>
+                    <div>
+                        <label for="password">Пароль:</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit">Войти</button>
+                </form>
+                
+                {% if sql_query %}
+                <div class="sql-demo">
+                    <h3>SQL-запрос, который будет выполнен:</h3>
+                    <code>{{ sql_query }}</code>
+                </div>
+                {% endif %}
+            </section>
+            
+            <section class="examples">
+                <h2>Примеры SQL-инъекций для обхода аутентификации:</h2>
+                
+                <div class="example">
+                    <h3>1. Обход пароля для конкретного пользователя:</h3>
+                    <p>Имя пользователя: <code>admin'--</code></p>
+                    <p>Пароль: <em>любой</em></p>
+                    <p>Получившийся SQL: <code>SELECT * FROM users WHERE username = 'admin'--' AND password = '...'</code></p>
+                </div>
+                
+                <div class="example">
+                    <h3>2. Вход как первый пользователь в таблице:</h3>
+                    <p>Имя пользователя: <code>' OR '1'='1</code></p>
+                    <p>Пароль: <code>' OR '1'='1</code></p>
+                    <p>Получившийся SQL: <code>SELECT * FROM users WHERE username = '' OR '1'='1' AND password = '' OR '1'='1'</code></p>
+                </div>
+                
+                <div class="example">
+                    <h3>3. Вход без знания имени пользователя:</h3>
+                    <p>Имя пользователя: <code>' OR username LIKE 'a%'--</code></p>
+                    <p>Пароль: <em>любой</em></p>
+                    <p>Найдет пользователей, имена которых начинаются с 'a'</p>
+                </div>
+                
+                <h3>Тестовые учетные записи:</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Имя пользователя</th>
+                            <th>Пароль</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>admin</td><td>admin123</td></tr>
+                        <tr><td>alice</td><td>password123</td></tr>
+                        <tr><td>bob</td><td>qwerty</td></tr>
+                        <tr><td>eve</td><td>123456</td></tr>
+                    </tbody>
+                </table>
+            </section>
+            
+            <section>
+                <h2>Почему это опасно?</h2>
+                <ul>
+                    <li>Злоумышленник может войти без пароля</li>
+                    <li>Можно извлечь хэши паролей из базы данных</li>
+                    <li>Можно модифицировать или удалить данные</li>
+                    <li>Можно получить доступ к данным других пользователей</li>
+                </ul>
+                
+                <h3>Как защититься:</h3>
+                <ul>
+                    <li>Используйте параметризованные запросы</li>
+                    <li>Храните пароли в хэшированном виде (bcrypt, Argon2)</li>
+                    <li>Ограничьте количество попыток входа</li>
+                    <li>Используйте двухфакторную аутентификацию</li>
+                </ul>
+            </section>
+        </main>
+        
+        <footer>
+            <p>Демонстрационный сайт для обучения безопасности. Никогда не используйте уязвимый код в продакшене!</p>
+        </footer>
+    </div>
+</body>
+</html>

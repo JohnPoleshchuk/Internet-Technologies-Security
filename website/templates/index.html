@@ -1,0 +1,64 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Уязвимый сайт - Главная</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Демонстрационный сайт с уязвимостями</h1>
+            <nav>
+                <a href="/">Главная</a>
+                <a href="/search">Поиск (SQL-инъекция)</a>
+                <a href="/login">Вход (SQL-инъекция)</a>
+                <a href="/comments">Комментарии (XSS)</a>
+                <a href="/safe-search">Безопасный поиск</a>
+                <a href="/safe-comments">Безопасные комментарии</a>
+                <a href="/demo">Демонстрация атак</a>
+            </nav>
+        </header>
+        
+        <main>
+            
+            <section>
+                <h2>Демонстрация уязвимостей</h2>
+                <p>Этот сайт содержит намеренно созданные уязвимости для обучения:</p>
+                
+                <div class="vulnerability">
+                    <h3>1. SQL-инъекции</h3>
+                    <p>На страницах <a href="/search">Поиск</a> и <a href="/login">Вход</a> реализованы SQL-инъекции.</p>
+                    <p>Пользовательский ввод напрямую подставляется в SQL-запросы без проверки.</p>
+                </div>
+                
+                <div class="vulnerability">
+                    <h3>2. XSS (Межсайтовый скриптинг)</h3>
+                    <p>На странице <a href="/comments">Комментарии</a> реализована XSS уязвимость.</p>
+                    <p>Пользовательский ввод отображается без экранирования HTML.</p>
+                </div>
+                
+                <div class="safe">
+                    <h3>Безопасные версии</h3>
+                    <p>Также доступны безопасные версии этих страниц:</p>
+                    <ul>
+                        <li><a href="/safe-search">Безопасный поиск</a> (параметризованные запросы)</li>
+                        <li><a href="/safe-comments">Безопасные комментарии</a> (экранирование HTML)</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section>
+                <h2>Исходный код</h2>
+                <p>Полный исходный код этого демонстрационного сайта доступен в файле <code>main.py</code>.</p>
+            </section>
+        </main>
+        
+        <footer>
+            <p>Демонстрационный сайт для обучения безопасности. Никогда не используйте уязвимый код в продакшене!</p>
+        </footer>
+    </div>
+</body>
+</html>
