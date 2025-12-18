@@ -224,66 +224,6 @@ async def add_comment(
     conn.close()
     
     return RedirectResponse("/comments", status_code=303)
-
-@app.get("/safe-search", response_class=HTMLResponse)
-async def safe_search_users(
-    request: Request, 
-    query: str = Query("", description="Безопасный поиск пользователей")
-):
-    """
-    Безопасная версия поиска с параметризованными запросами.
-    """
-    conn = get_db()
-    cursor = conn.cursor()
-    
-    # БЕЗОПАСНЫЙ КОД: использование параметризованных запросов
-    sql = "SELECT * FROM users WHERE username LIKE ? OR email LIKE ?"
-    params = (f"%{query}%", f"%{query}%")
-    
-    cursor.execute(sql, params)
-    users = cursor.fetchall()
-    
-    conn.close()
-    
-    return templates.TemplateResponse(
-        "safe_search.html", 
-        {
-            "request": request, 
-            "users": users, 
-            "query": query,
-            "sql_query": sql,  # Показываем SQL запрос для демонстрации
-            "params": params
-        }
-    )
-
-@app.get("/safe-comments", response_class=HTMLResponse)
-async def safe_comments_page(request: Request):
-    """
-    Безопасная версия страницы комментариев с экранированием HTML.
-    """
-    conn = get_db()
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT messages.*, users.username FROM messages JOIN users ON messages.user_id = users.id ORDER BY timestamp DESC")
-    messages = cursor.fetchall()
-    
-    conn.close()
-    
-    # Экранируем HTML во всех сообщениях для безопасного отображения
-    safe_messages = []
-    for msg in messages:
-        safe_msg = dict(msg)
-        safe_msg['content'] = html.escape(msg['content'])
-        safe_messages.append(safe_msg)
-    
-    return templates.TemplateResponse(
-        "safe_comments.html", 
-        {
-            "request": request, 
-            "messages": safe_messages
-        }
-    )
-
 @app.get("/demo")
 async def demo_page(request: Request):
     """Страница с демонстрацией эксплуатации уязвимостей"""
